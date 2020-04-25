@@ -6,7 +6,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>server</module>
-        <module>receiver</module>
+        <module>client</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>

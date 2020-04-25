@@ -15,16 +15,10 @@
  */
 package cn.edu.nuaa.software.websocket.client.netty;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import cn.edu.nuaa.software.websocket.client.WsClientApplication;
@@ -42,12 +36,12 @@ public class Receiver extends WebSocketClient {
 
     private final String name;
     private final String namespace;
-    private       final String           url;
+    private final String url;
 
     public Receiver(String namespace, String name, String url) {
         super(URI.create(url));
-        this.url=url;
-        this.name=name;
+        this.url = url;
+        this.name = name;
         this.namespace = namespace;
     }
 
@@ -61,23 +55,9 @@ public class Receiver extends WebSocketClient {
 
     @Override
     public void onMessage(String message) {
-        Map parse = null;
-        try {
-            parse = JSONObject.parseObject(message, Map.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error("client {} error {}", name, e.getMessage());
-            return;
-        }
-        if (parse != null && parse.containsKey("protocalId") && "PROTO_HEART_BEAT".equals(parse.get("protocolId").toString())) {
-            Map map = new HashMap();
-            map.put("path", "internal/heart_beat");
-            map.put("protocolId", "PROTO_HEART_BEAT");
-            map.put("sourceType", "request");
-            map.put("taskId", UUID.randomUUID().toString());
-            String text = JSON.toJSONString(map);
-            send(text);
-            log.debug("send heart beat {}", text);
+        log.debug("receive message {}", message);
+        if (checkHeartBeat(message)) {
+            sendHeartBeat();
         } else {
             log.debug("client {} receive message [{}]", name, message);
         }
@@ -85,12 +65,20 @@ public class Receiver extends WebSocketClient {
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        log.info(" client {} quit", name);
+        log.info(" client {} quit,reason {}", name, reason);
         WsClientApplication.COUNT_MAP.get(namespace).decrementAndGet();
     }
 
     @Override
     public void onError(Exception ex) {
         log.info(" client {} exception", ex.getMessage());
+    }
+
+    private boolean checkHeartBeat(String msg) {
+        return false;
+    }
+
+    private void sendHeartBeat() {
+
     }
 }

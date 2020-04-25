@@ -77,6 +77,7 @@ public class SenderController implements DisposableBean {
     });
     private ConcurrentMap<String, EventLoopGroup> currentTask = new ConcurrentHashMap<>();
 
+
     @RequestMapping("producer/{namespace}/{threadCount}/{taskCountPerThread}")
     public String sendMessage(@PathVariable("namespace") String namespace, @PathVariable("threadCount") int threadCount, @PathVariable("taskCountPerThread") int taskCountPerThread) {
         if (StringUtils.hasText(namespace) && threadCount > 0 && taskCountPerThread > 0) {
@@ -97,7 +98,7 @@ public class SenderController implements DisposableBean {
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            }finally {
+            } finally {
                 lock.unlock();
             }
             return "task is running";
@@ -119,39 +120,12 @@ public class SenderController implements DisposableBean {
             stopExistTask(namespace);
             establishConnections(namespace, threadCount, taskCountPerThread);
         } else {
-            if (threadCount * taskCountPerThread != WsClientApplication.COUNT_MAP.getOrDefault(namespace, new AtomicInteger(0)).get()) {
+            if (threadCount * taskCountPerThread != WsClientApplication.CONNECTION_COUNT_MAP.getOrDefault(namespace, new AtomicInteger(0)).get()) {
                 stopExistTask(namespace);
                 establishConnections(namespace, threadCount, taskCountPerThread);
             }
         }
         return new CheckResult(true, "", WsClientApplication.CLIENT_MAP.get(namespace).size());
-    }
-
-
-    private void stopExistTask(String namespace) {
-        Queue<Receiver> receivers = WsClientApplication.CLIENT_MAP.getOrDefault(namespace, null);
-        if (receivers != null) {
-            log.info("exists not matched connections,begin to stop them");
-            receivers.stream().forEach(Receiver::close);
-            log.info("exists not matched connections,finish stop them");
-            receivers.clear();
-        }
-    }
-
-    private void establishConnections(String namespace, int threadCount, int taskCountPerThread) {
-        log.info("start to establish connections");
-        try {
-            CountDownLatch latch = new CountDownLatch(threadCount);
-            for (int i = 0; i < threadCount; i++) {
-                executor.execute(new ConnectionTask(namespace, i, taskCountPerThread, latch));
-            }
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            log.info("establishConnections error,{}", e.getMessage());
-            throw new RuntimeException("unable to establish connections");
-        }
-        log.info("end to establish {} connectinos", threadCount * taskCountPerThread);
     }
 
     private void start(String namespace, int threadCount, int taskCountPerThread) {
@@ -163,7 +137,7 @@ public class SenderController implements DisposableBean {
         EventLoopGroup group     = new NioEventLoopGroup(count);
         currentTask.put(namespace, group);
         List<String>         list    = new ArrayList<>();
-        SenderChannelHandler handler = new SenderChannelHandler(barrier, list);
+        SenderChannelHandler handler = new SenderChannelHandler(namespace, barrier, list);
         bootstrap.group(group)
                  .channel(NioSocketChannel.class)
                  .option(ChannelOption.SO_KEEPALIVE, true)
@@ -204,7 +178,33 @@ public class SenderController implements DisposableBean {
             currentTask.remove(namespace);
             WsClientApplication.STATUS_MAP.put(namespace, false);
         }
-        log.info("done.current connection is {}", WsClientApplication.COUNT_MAP.getOrDefault(namespace, new AtomicInteger(0)).get());
+        log.info("done.current connection is {}", WsClientApplication.CONNECTION_COUNT_MAP.getOrDefault(namespace, new AtomicInteger(0)).get());
+    }
+
+    private void stopExistTask(String namespace) {
+        Queue<Receiver> receivers = WsClientApplication.CLIENT_MAP.getOrDefault(namespace, null);
+        if (receivers != null) {
+            log.info("exists not matched connections,begin to stop them");
+            receivers.stream().forEach(Receiver::close);
+            log.info("exists not matched connections,finish stop them");
+            receivers.clear();
+        }
+    }
+
+    private void establishConnections(String namespace, int threadCount, int taskCountPerThread) {
+        log.info("start to establish connections");
+        try {
+            CountDownLatch latch = new CountDownLatch(threadCount);
+            for (int i = 0; i < threadCount; i++) {
+                executor.execute(new ConnectionTask(namespace, i, taskCountPerThread, latch));
+            }
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            log.info("establishConnections error,{}", e.getMessage());
+            throw new RuntimeException("unable to establish connections");
+        }
+        log.info("end to establish {} connectinos", threadCount * taskCountPerThread);
     }
 
     @Override

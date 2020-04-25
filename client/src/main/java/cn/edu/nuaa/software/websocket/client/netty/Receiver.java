@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import cn.edu.nuaa.software.websocket.client.WsClientApplication;
+import cn.edu.nuaa.software.websocket.client.dto.AuditPojo;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -49,13 +50,14 @@ public class Receiver extends WebSocketClient {
     public void onOpen(ServerHandshake handshakedata) {
         log.info("client {} 连接成功", name);
         AtomicInteger defaultValue = new AtomicInteger(0);
-        WsClientApplication.COUNT_MAP.putIfAbsent(namespace, defaultValue);
-        WsClientApplication.COUNT_MAP.get(namespace).incrementAndGet();
+        WsClientApplication.CONNECTION_COUNT_MAP.putIfAbsent(namespace, defaultValue);
+        WsClientApplication.CONNECTION_COUNT_MAP.get(namespace).incrementAndGet();
     }
 
     @Override
     public void onMessage(String message) {
         log.debug("receive message {}", message);
+        audit(message);
         if (checkHeartBeat(message)) {
             sendHeartBeat();
         } else {
@@ -66,12 +68,17 @@ public class Receiver extends WebSocketClient {
     @Override
     public void onClose(int code, String reason, boolean remote) {
         log.info(" client {} quit,reason {}", name, reason);
-        WsClientApplication.COUNT_MAP.get(namespace).decrementAndGet();
+        WsClientApplication.CONNECTION_COUNT_MAP.get(namespace).decrementAndGet();
     }
 
     @Override
     public void onError(Exception ex) {
         log.info(" client {} exception", ex.getMessage());
+    }
+
+    private void audit(String message) {
+        WsClientApplication.AUDIT_MAP.putIfAbsent(namespace, new AuditPojo());
+        WsClientApplication.AUDIT_MAP.get(namespace).getReceiveCount().incrementAndGet();
     }
 
     private boolean checkHeartBeat(String msg) {

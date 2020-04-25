@@ -29,9 +29,10 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import cn.edu.nuaa.software.websocket.client.WsClientApplication;
+import cn.edu.nuaa.software.websocket.client.dto.AuditPojo;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
@@ -51,12 +52,12 @@ import lombok.extern.slf4j.Slf4j;
  * version: V1.0
  */
 @Slf4j
-@ChannelHandler.Sharable
 public class SenderChannelHandler extends ChannelInboundHandlerAdapter {
     private static final String        senderUrl;
     private final        CyclicBarrier barrier;
     private final        List<String>  list;
     private final        AtomicInteger index = new AtomicInteger(-1);
+    private final        String        namespace;
 
     static {
         String temp;
@@ -69,9 +70,10 @@ public class SenderChannelHandler extends ChannelInboundHandlerAdapter {
         senderUrl = temp;
     }
 
-    public SenderChannelHandler(CyclicBarrier barrier, List<String> list) {
+    public SenderChannelHandler(String namespace, CyclicBarrier barrier, List<String> list) {
         this.barrier = barrier;
         this.list = list;
+        this.namespace = namespace;
     }
 
     @Override
@@ -93,7 +95,7 @@ public class SenderChannelHandler extends ChannelInboundHandlerAdapter {
             e.printStackTrace();
             ctx.pipeline().close();
         }
-        ByteBuf         content = makeRequestBody();
+        ByteBuf         content = makeRequestBody(ctx);
         FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, senderUrl, content);
         request.headers().set(HttpHeaderNames.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).set(HttpHeaderNames.CONTENT_LENGTH, request.content().readableBytes());
         ctx.writeAndFlush(request);
@@ -112,6 +114,7 @@ public class SenderChannelHandler extends ChannelInboundHandlerAdapter {
         ByteBuf          content  = response.content();
         log.debug("response content [{}]", content.toString(StandardCharsets.UTF_8));
         ReferenceCountUtil.release(msg);
+        audit(ctx, msg);
         ctx.channel().close();
     }
 
@@ -136,14 +139,19 @@ public class SenderChannelHandler extends ChannelInboundHandlerAdapter {
         ctx.channel().close();
     }
 
-    private ByteBuf makeRequestBody() {
+    private void audit(ChannelHandlerContext ctx, Object msg) {
+        WsClientApplication.AUDIT_MAP.putIfAbsent(namespace, new AuditPojo());
+        WsClientApplication.AUDIT_MAP.get(namespace).getSendCount().incrementAndGet();
+    }
+
+    private ByteBuf makeRequestBody(ChannelHandlerContext ctx) {
         Map map = new HashMap();
         map.put("content", "test");
-        map.put("receiveId", getName());
+        map.put("receiveId", getName(ctx));
         return Unpooled.copiedBuffer(JSON.toJSONString(map).getBytes(StandardCharsets.UTF_8));
     }
 
-    private String getName() {
+    private String getName(ChannelHandlerContext ctx) {
         int    i = this.index.incrementAndGet();
         String s = list.get(i);
         log.debug("get name {}", s);

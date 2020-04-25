@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import cn.edu.nuaa.software.websocket.client.WsClientApplication;
+import cn.edu.nuaa.software.websocket.client.dto.AuditPojo;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -33,12 +34,24 @@ import lombok.extern.slf4j.Slf4j;
  */
 @RestController
 @Slf4j
-@RequestMapping("count")
+@RequestMapping("audit")
 public class CountController {
 
-    @RequestMapping("/{namespace}")
-    public long get(@PathVariable("namespace") String namespace) {
-        return WsClientApplication.COUNT_MAP.getOrDefault(namespace, new AtomicInteger(0)).get();
+    @RequestMapping("/conn/{namespace}")
+    public long conn(@PathVariable("namespace") String namespace) {
+        return WsClientApplication.CONNECTION_COUNT_MAP.getOrDefault(namespace, new AtomicInteger(0)).get();
+    }
+
+    @RequestMapping("/send/{namespace}")
+    public long send(@PathVariable("namespace") String namespace) {
+        WsClientApplication.AUDIT_MAP.putIfAbsent(namespace, new AuditPojo());
+        return WsClientApplication.AUDIT_MAP.get(namespace).getSendCount().get();
+    }
+
+    @RequestMapping("/receive/{namespace}")
+    public long receive(@PathVariable("namespace") String namespace) {
+        WsClientApplication.AUDIT_MAP.putIfAbsent(namespace, new AuditPojo());
+        return WsClientApplication.AUDIT_MAP.get(namespace).getReceiveCount().get();
     }
 
 }

@@ -60,15 +60,14 @@ public class AuditController {
     }
 
     @Scheduled(cron = "0/15 * * * * ?")
-    public String report() {
+    public void report() {
+        Map map = new HashMap();
         if (!WsClientApplication.AUDIT_MAP.isEmpty()) {
-            Map map = new HashMap();
             WsClientApplication.AUDIT_MAP.forEach((k, v) -> {
                 WsClientApplication.AUDIT_MAP.putIfAbsent(k, new AuditPojo());
                 map.put(k, "send:" + WsClientApplication.AUDIT_MAP.get(k).getSendCount().get() + ";receive:" + WsClientApplication.AUDIT_MAP.get(k).getReceiveCount().get());
             });
-            return JSON.toJSONString(map);
         }
-        return "No data";
+        log.info("report task:[{}]", JSON.toJSONString(map));
     }
 }

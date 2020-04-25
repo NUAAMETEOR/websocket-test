@@ -135,6 +135,7 @@ public class SenderController implements DisposableBean {
         String         host      = WsClientApplication.url.replace("ws://", "");
         Bootstrap      bootstrap = new Bootstrap();
         EventLoopGroup group     = new NioEventLoopGroup(count);
+        AtomicInteger  index     = new AtomicInteger(-1);
         currentTask.put(namespace, group);
         List<String> list = new ArrayList<>();
         bootstrap.group(group)
@@ -148,7 +149,7 @@ public class SenderController implements DisposableBean {
                            .addLast(new HttpClientCodec())
                            .addLast(new HttpContentDecompressor())
                            .addLast(new HttpObjectAggregator(8 * 1024 * 1024))
-                           .addLast(new SenderChannelHandler(namespace, barrier, list));
+                           .addLast(new SenderChannelHandler(namespace, index, barrier, list));
                      }
                  });
         WsClientApplication.STATUS_MAP.put(namespace, true);

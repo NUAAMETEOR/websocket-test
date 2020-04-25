@@ -56,7 +56,7 @@ public class SenderChannelHandler extends ChannelInboundHandlerAdapter {
     private static final String        senderUrl;
     private final        CyclicBarrier barrier;
     private final        List<String>  list;
-    private final        AtomicInteger index = new AtomicInteger(-1);
+    private final        AtomicInteger index;
     private final        String        namespace;
 
     static {
@@ -70,10 +70,11 @@ public class SenderChannelHandler extends ChannelInboundHandlerAdapter {
         senderUrl = temp;
     }
 
-    public SenderChannelHandler(String namespace, CyclicBarrier barrier, List<String> list) {
+    public SenderChannelHandler(String namespace, AtomicInteger index, CyclicBarrier barrier, List<String> list) {
         this.barrier = barrier;
         this.list = list;
         this.namespace = namespace;
+        this.index = index;
     }
 
     @Override
@@ -147,11 +148,11 @@ public class SenderChannelHandler extends ChannelInboundHandlerAdapter {
     private ByteBuf makeRequestBody(ChannelHandlerContext ctx) {
         Map map = new HashMap();
         map.put("content", "test");
-        map.put("receiveId", getName(ctx));
+        map.put("receiveId", getName());
         return Unpooled.copiedBuffer(JSON.toJSONString(map).getBytes(StandardCharsets.UTF_8));
     }
 
-    private String getName(ChannelHandlerContext ctx) {
+    private String getName() {
         int    i = this.index.incrementAndGet();
         String s = list.get(i);
         log.debug("get name {}", s);

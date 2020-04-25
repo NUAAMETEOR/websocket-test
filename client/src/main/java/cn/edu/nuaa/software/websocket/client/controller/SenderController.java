@@ -136,8 +136,7 @@ public class SenderController implements DisposableBean {
         Bootstrap      bootstrap = new Bootstrap();
         EventLoopGroup group     = new NioEventLoopGroup(count);
         currentTask.put(namespace, group);
-        List<String>         list    = new ArrayList<>();
-        SenderChannelHandler handler = new SenderChannelHandler(namespace, barrier, list);
+        List<String> list = new ArrayList<>();
         bootstrap.group(group)
                  .channel(NioSocketChannel.class)
                  .option(ChannelOption.SO_KEEPALIVE, true)
@@ -149,7 +148,7 @@ public class SenderController implements DisposableBean {
                            .addLast(new HttpClientCodec())
                            .addLast(new HttpContentDecompressor())
                            .addLast(new HttpObjectAggregator(8 * 1024 * 1024))
-                           .addLast(handler);
+                           .addLast(new SenderChannelHandler(namespace, barrier, list));
                      }
                  });
         WsClientApplication.STATUS_MAP.put(namespace, true);

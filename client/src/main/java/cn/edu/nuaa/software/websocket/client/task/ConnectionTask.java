@@ -23,7 +23,7 @@ import java.util.concurrent.CountDownLatch;
 
 import cn.edu.nuaa.software.websocket.client.WsClientApplication;
 import cn.edu.nuaa.software.websocket.client.common.WsUtil;
-import cn.edu.nuaa.software.websocket.client.netty.Client;
+import cn.edu.nuaa.software.websocket.client.netty.Receiver;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,16 +45,16 @@ public class ConnectionTask implements Runnable {
 
     @Override
     public void run() {
-        ConcurrentLinkedDeque<Client> defaultValue = new ConcurrentLinkedDeque<>();
+        ConcurrentLinkedDeque<Receiver> defaultValue = new ConcurrentLinkedDeque<>();
         WsClientApplication.CLIENT_MAP.putIfAbsent(namespace, defaultValue);
-        Queue<Client> clients = WsClientApplication.CLIENT_MAP.get(namespace);
+        Queue<Receiver> receivers = WsClientApplication.CLIENT_MAP.get(namespace);
         for (int i = 0; i < connectionCount; i++) {
             String s = WsUtil.makeName(namespace, taskNo, i);
             String name = Base64.getEncoder().encodeToString(s.getBytes(StandardCharsets.UTF_8));
-            String url = WsClientApplication.url + "?token=" + name;
-            Client client = new Client(namespace, name, url);
-            clients.offer(client);
-            client.connect();
+            String   url      = WsClientApplication.url + "?token=" + name;
+            Receiver receiver = new Receiver(namespace, name, url);
+            receivers.offer(receiver);
+            receiver.connect();
         }
         latch.countDown();
     }

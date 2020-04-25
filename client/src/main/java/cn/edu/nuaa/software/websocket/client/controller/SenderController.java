@@ -41,7 +41,7 @@ import cn.edu.nuaa.software.websocket.client.WsClientApplication;
 import cn.edu.nuaa.software.websocket.client.common.WsUtil;
 import cn.edu.nuaa.software.websocket.client.dto.CheckResult;
 import cn.edu.nuaa.software.websocket.client.dto.WsTestParameter;
-import cn.edu.nuaa.software.websocket.client.netty.Client;
+import cn.edu.nuaa.software.websocket.client.netty.Receiver;
 import cn.edu.nuaa.software.websocket.client.netty.SenderChannelHandler;
 import cn.edu.nuaa.software.websocket.client.task.ConnectionTask;
 import io.netty.bootstrap.Bootstrap;
@@ -129,12 +129,12 @@ public class SenderController implements DisposableBean {
 
 
     private void stopExistTask(String namespace) {
-        Queue<Client> clients = WsClientApplication.CLIENT_MAP.getOrDefault(namespace, null);
-        if (clients != null) {
+        Queue<Receiver> receivers = WsClientApplication.CLIENT_MAP.getOrDefault(namespace, null);
+        if (receivers != null) {
             log.info("exists not matched connections,begin to stop them");
-            clients.stream().forEach(Client::close);
+            receivers.stream().forEach(Receiver::close);
             log.info("exists not matched connections,finish stop them");
-            clients.clear();
+            receivers.clear();
         }
     }
 

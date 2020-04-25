@@ -38,13 +38,13 @@ import lombok.extern.slf4j.Slf4j;
  * version: V1.0
  */
 @Slf4j
-public class Client extends WebSocketClient {
+public class Receiver extends WebSocketClient {
 
     private final String name;
     private final String namespace;
     private       final String           url;
 
-    public Client(String namespace, String name, String url) {
+    public Receiver(String namespace, String name, String url) {
         super(URI.create(url));
         this.url=url;
         this.name=name;

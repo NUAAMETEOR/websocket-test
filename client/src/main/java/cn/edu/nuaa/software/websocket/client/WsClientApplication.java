@@ -31,7 +31,7 @@ import java.util.concurrent.locks.Lock;
 
 import cn.edu.nuaa.software.websocket.client.controller.SenderController;
 import cn.edu.nuaa.software.websocket.client.dto.WsTestParameter;
-import cn.edu.nuaa.software.websocket.client.netty.Client;
+import cn.edu.nuaa.software.websocket.client.netty.Receiver;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WsClientApplication implements ApplicationListener<ApplicationReadyEvent> {
 
     public static final ConcurrentMap<String, WsTestParameter> TEST_PARAMETER_CONCURRENT_MAP = new ConcurrentHashMap<>(16);
-    public static final ConcurrentMap<String, Queue<Client>>   CLIENT_MAP                    = new ConcurrentHashMap<>(16);
+    public static final ConcurrentMap<String, Queue<Receiver>> CLIENT_MAP                    = new ConcurrentHashMap<>(16);
     public static final ConcurrentMap<String, Boolean>         STATUS_MAP                    = new ConcurrentHashMap<>(16);
     public static final ConcurrentMap<String, Boolean>         AUTO_SEND_MAP                 = new ConcurrentHashMap<>(16);
     public static final ConcurrentMap<String, Lock>            LOCK_MAP                      = new ConcurrentHashMap<>(16);

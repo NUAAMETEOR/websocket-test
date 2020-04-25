@@ -15,10 +15,15 @@
  */
 package cn.edu.nuaa.software.websocket.client.controller;
 
+import com.alibaba.fastjson.JSON;
+
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import cn.edu.nuaa.software.websocket.client.WsClientApplication;
@@ -35,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 @RequestMapping("audit")
-public class CountController {
+public class AuditController {
 
     @RequestMapping("/conn/{namespace}")
     public long conn(@PathVariable("namespace") String namespace) {
@@ -48,10 +53,22 @@ public class CountController {
         return WsClientApplication.AUDIT_MAP.get(namespace).getSendCount().get();
     }
 
-    @RequestMapping("/receive/{namespace}")
+    @RequestMapping("/recv/{namespace}")
     public long receive(@PathVariable("namespace") String namespace) {
         WsClientApplication.AUDIT_MAP.putIfAbsent(namespace, new AuditPojo());
         return WsClientApplication.AUDIT_MAP.get(namespace).getReceiveCount().get();
     }
 
+    @Scheduled(cron = "0/15 * * * * ?")
+    public String report() {
+        if (!WsClientApplication.AUDIT_MAP.isEmpty()) {
+            Map map = new HashMap();
+            WsClientApplication.AUDIT_MAP.forEach((k, v) -> {
+                WsClientApplication.AUDIT_MAP.putIfAbsent(k, new AuditPojo());
+                map.put(k, "send:" + WsClientApplication.AUDIT_MAP.get(k).getSendCount().get() + ";receive:" + WsClientApplication.AUDIT_MAP.get(k).getReceiveCount().get());
+            });
+            return JSON.toJSONString(map);
+        }
+        return "No data";
+    }
 }

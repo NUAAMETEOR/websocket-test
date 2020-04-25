@@ -46,7 +46,7 @@ public class AutoSendController {
 
     @RequestMapping("/{namespace}/{flag}")
     public String autoStart(@PathVariable("namespace") String namespace, @PathVariable("flag") boolean flag) {
-        if (WsClientApplication.TEST_PARAMETER_CONCURRENT_MAP.containsKey(namespace)) {
+        if (!WsClientApplication.TEST_PARAMETER_CONCURRENT_MAP.containsKey(namespace)) {
             return namespace + " not found";
         }
         WsClientApplication.LOCK_MAP.putIfAbsent(namespace, new ReentrantLock());

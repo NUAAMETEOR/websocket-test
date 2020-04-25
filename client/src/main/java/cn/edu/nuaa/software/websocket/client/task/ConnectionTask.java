@@ -52,7 +52,7 @@ public class ConnectionTask implements Runnable {
             String s = WsUtil.makeName(namespace, taskNo, i);
             String name = Base64.getEncoder().encodeToString(s.getBytes(StandardCharsets.UTF_8));
             String   url      = WsClientApplication.url + "?token=" + name;
-            Receiver receiver = new Receiver(namespace, name, url);
+            Receiver receiver = new Receiver(namespace, s, url);
             receivers.offer(receiver);
             receiver.connect();
         }

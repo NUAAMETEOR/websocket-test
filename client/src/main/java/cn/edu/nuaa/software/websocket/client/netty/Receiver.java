@@ -57,10 +57,10 @@ public class Receiver extends WebSocketClient {
     @Override
     public void onMessage(String message) {
         log.debug("receive message {}", message);
-        audit(message);
         if (checkHeartBeat(message)) {
             sendHeartBeat();
         } else {
+            audit(message);
             log.debug("client {} receive message [{}]", name, message);
         }
     }
@@ -76,16 +76,16 @@ public class Receiver extends WebSocketClient {
         log.info(" client {} exception", ex.getMessage());
     }
 
-    private void audit(String message) {
-        WsClientApplication.AUDIT_MAP.putIfAbsent(namespace, new AuditPojo());
-        WsClientApplication.AUDIT_MAP.get(namespace).getReceiveCount().incrementAndGet();
-    }
-
     private boolean checkHeartBeat(String msg) {
         return false;
     }
 
     private void sendHeartBeat() {
 
+    }
+
+    private void audit(String message) {
+        WsClientApplication.AUDIT_MAP.putIfAbsent(namespace, new AuditPojo());
+        WsClientApplication.AUDIT_MAP.get(namespace).getReceiveCount().incrementAndGet();
     }
 }

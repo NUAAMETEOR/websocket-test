@@ -26,7 +26,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import cn.edu.nuaa.software.websocket.client.WsClientApplication;
-import cn.edu.nuaa.software.websocket.client.dto.WsTestParameter;
+import cn.edu.nuaa.software.websocket.client.dto.WsNamespaceParameter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -61,14 +61,14 @@ public class AutoSendController {
         }finally {
             lock.unlock();
         }
-        return "try later";
+        return "task is running,try later";
     }
 
     @Scheduled(cron = "0/10 * * * * ?")
     public void autoSendMsgToWsServer() {
         WsClientApplication.AUTO_SEND_MAP.forEach((k,v)->{
             if (v) {
-                WsTestParameter parameter = WsClientApplication.TEST_PARAMETER_CONCURRENT_MAP.get(k);
+                WsNamespaceParameter parameter = WsClientApplication.TEST_PARAMETER_CONCURRENT_MAP.get(k);
                 log.info("Auto start task {}", parameter.getNamespace());
                 senderController.sendMessage(parameter.getNamespace(), parameter.getThreadCount(), parameter.getTaskCountPerThread());
             }

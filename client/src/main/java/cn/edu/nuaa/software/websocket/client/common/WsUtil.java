@@ -15,6 +15,14 @@
  */
 package cn.edu.nuaa.software.websocket.client.common;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+
 /**
  * ClassName: WsUtil
  * Description:
@@ -25,5 +33,41 @@ package cn.edu.nuaa.software.websocket.client.common;
 public class WsUtil {
     public static String makeName(String namespace, int threadCount, int taskCountPerThread) {
         return namespace + "_" + threadCount + "_" + taskCountPerThread;
+    }
+
+    public static List<String> getLocalIPs() {
+        List<String>                  list        = new ArrayList<>();
+        try {
+            Enumeration<NetworkInterface> enumeration = NetworkInterface.getNetworkInterfaces();
+            while (enumeration.hasMoreElements()) {
+                NetworkInterface intf = enumeration.nextElement();
+                if (intf.isLoopback() || intf.isVirtual()) {
+                    continue;
+                }
+                Enumeration<InetAddress> inets = intf.getInetAddresses();
+                while (inets.hasMoreElements()) {
+                    InetAddress addr = inets.nextElement();
+                    if (addr.isLoopbackAddress() || !addr.isSiteLocalAddress() || addr.isAnyLocalAddress()) {
+                        continue;
+                    }
+                    list.add(addr.getHostAddress());
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        if (list.isEmpty()) {
+            list.add("unknow");
+        }
+        return list;
+    }
+
+    public static String getHostName() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        return "Unknow";
     }
 }

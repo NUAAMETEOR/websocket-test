@@ -40,7 +40,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import cn.edu.nuaa.software.websocket.client.WsClientApplication;
 import cn.edu.nuaa.software.websocket.client.common.WsUtil;
 import cn.edu.nuaa.software.websocket.client.dto.CheckResult;
-import cn.edu.nuaa.software.websocket.client.dto.WsTestParameter;
+import cn.edu.nuaa.software.websocket.client.dto.WsNamespaceParameter;
 import cn.edu.nuaa.software.websocket.client.netty.Receiver;
 import cn.edu.nuaa.software.websocket.client.netty.SenderChannelHandler;
 import cn.edu.nuaa.software.websocket.client.task.ConnectionTask;
@@ -113,8 +113,8 @@ public class SenderController implements DisposableBean {
         if (WsClientApplication.STATUS_MAP.get(namespace)) {
             return new CheckResult(false, "task is running", 0);
         }
-        WsTestParameter newPara = new WsTestParameter(namespace, threadCount, taskCountPerThread);
-        WsTestParameter oldPara = WsClientApplication.TEST_PARAMETER_CONCURRENT_MAP.putIfAbsent(namespace, newPara);
+        WsNamespaceParameter newPara = new WsNamespaceParameter(namespace, threadCount, taskCountPerThread);
+        WsNamespaceParameter oldPara = WsClientApplication.TEST_PARAMETER_CONCURRENT_MAP.putIfAbsent(namespace, newPara);
         if (!newPara.equals(oldPara)) {
             WsClientApplication.TEST_PARAMETER_CONCURRENT_MAP.replace(namespace, newPara);
             stopExistTask(namespace);
@@ -178,7 +178,7 @@ public class SenderController implements DisposableBean {
             currentTask.remove(namespace);
             WsClientApplication.STATUS_MAP.put(namespace, false);
         }
-        log.info("done.current connection is {}", WsClientApplication.CONNECTION_COUNT_MAP.getOrDefault(namespace, new AtomicInteger(0)).get());
+        log.info("send done.");
     }
 
     private void stopExistTask(String namespace) {

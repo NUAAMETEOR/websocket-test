@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.util.StringUtils;
@@ -32,7 +33,9 @@ import java.util.concurrent.locks.Lock;
 
 import cn.edu.nuaa.software.websocket.client.controller.SenderController;
 import cn.edu.nuaa.software.websocket.client.dto.AuditPojo;
-import cn.edu.nuaa.software.websocket.client.dto.WsTestParameter;
+import cn.edu.nuaa.software.websocket.client.dto.ReportDto;
+import cn.edu.nuaa.software.websocket.client.dto.WsClientTestParameteor;
+import cn.edu.nuaa.software.websocket.client.dto.WsNamespaceParameter;
 import cn.edu.nuaa.software.websocket.client.netty.Receiver;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,19 +50,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EnableScheduling
 @RestController
+@EnableConfigurationProperties(WsClientTestParameteor.class)
 public class WsClientApplication implements ApplicationListener<ApplicationReadyEvent> {
 
-    public static final ConcurrentMap<String, WsTestParameter> TEST_PARAMETER_CONCURRENT_MAP = new ConcurrentHashMap<>(16);
-    public static final ConcurrentMap<String, Queue<Receiver>> CLIENT_MAP                    = new ConcurrentHashMap<>(16);
+    public static final ConcurrentMap<String, WsNamespaceParameter> TEST_PARAMETER_CONCURRENT_MAP = new ConcurrentHashMap<>(16);
+    public static final ConcurrentMap<String, Queue<Receiver>>      CLIENT_MAP                    = new ConcurrentHashMap<>(16);
     public static final ConcurrentMap<String, Boolean>         STATUS_MAP                    = new ConcurrentHashMap<>(16);
     public static final ConcurrentMap<String, Boolean>         AUTO_SEND_MAP                 = new ConcurrentHashMap<>(16);
-    public static final ConcurrentMap<String, Lock>          LOCK_MAP             = new ConcurrentHashMap<>(16);
-    public static final ConcurrentMap<String, AtomicInteger> CONNECTION_COUNT_MAP = new ConcurrentHashMap<>(16);
-    public static final ConcurrentMap<String, AuditPojo>     AUDIT_MAP = new ConcurrentHashMap<>(16);
-    @Autowired
-    private SenderController                                 senderController;
+    public static final ConcurrentMap<String, Lock>            LOCK_MAP                      = new ConcurrentHashMap<>(16);
+    public static final ConcurrentMap<String, AtomicInteger>   CONNECTION_COUNT_MAP          = new ConcurrentHashMap<>(16);
+    public static final ConcurrentMap<String, AuditPojo> AUDIT_MAP = new ConcurrentHashMap<>(16);
+    public static final ConcurrentMap<String, ReportDto> REPORTS_MAP = new ConcurrentHashMap<>(16);
+    public static String                                 url       = "ws://localhost:9000";
 
-    public static String url = "ws://localhost:9000";
+    @Autowired
+    private WsClientTestParameteor clientTestParameteor;
+
+    @Autowired
+    private             SenderController                       senderController;
 
     public static void main(String[] args) {
         SpringApplication.run(WsClientApplication.class, args);
@@ -67,18 +75,14 @@ public class WsClientApplication implements ApplicationListener<ApplicationReady
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        String s = System.getProperty("url", null);
-        if (StringUtils.hasText(s)) {
-            url = s;
-        }
-        log.info("use websocket address:{}", url);
-        s = System.getProperty("auto");
+        log.info("use websocket address:{}", clientTestParameteor.getWsServerUrl());
+        String s = System.getProperty("auto");
         if (s != null) {
-            String namespace = System.getProperty("n");
-            int threadCount = Integer.valueOf(System.getProperty("t"));
-            int taskCountPerThread = Integer.valueOf(System.getProperty("c"));
-            senderController.sendMessage(namespace, threadCount, taskCountPerThread);
+            String namespace          = System.getProperty("n");
+            int    threadCount        = Integer.valueOf(System.getProperty("t"));
+            int    taskCountPerThread = Integer.valueOf(System.getProperty("c"));
             AUTO_SEND_MAP.put(namespace, true);
+            senderController.sendMessage(namespace, threadCount, taskCountPerThread);
         }
     }
 }

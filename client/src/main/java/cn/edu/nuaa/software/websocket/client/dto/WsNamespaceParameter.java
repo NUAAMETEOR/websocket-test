@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 @AllArgsConstructor
-public class WsTestParameter {
+public class WsNamespaceParameter {
     private String namespace;
     private int    threadCount;
     private int    taskCountPerThread;

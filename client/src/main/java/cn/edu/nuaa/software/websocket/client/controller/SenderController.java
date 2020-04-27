@@ -40,6 +40,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import cn.edu.nuaa.software.websocket.client.WsClientApplication;
 import cn.edu.nuaa.software.websocket.client.common.WsUtil;
 import cn.edu.nuaa.software.websocket.client.dto.CheckResult;
+import cn.edu.nuaa.software.websocket.client.dto.WsClientTestParameteor;
 import cn.edu.nuaa.software.websocket.client.dto.WsNamespaceParameter;
 import cn.edu.nuaa.software.websocket.client.netty.Receiver;
 import cn.edu.nuaa.software.websocket.client.netty.SenderChannelHandler;
@@ -132,7 +133,7 @@ public class SenderController implements DisposableBean {
         int            count     = threadCount * taskCountPerThread;
         CountDownLatch latch     = new CountDownLatch(count);
         CyclicBarrier  barrier   = new CyclicBarrier(count);
-        String         host      = WsClientApplication.url.replace("ws://", "");
+        String         host      = WsClientApplication.applicationContext.getBean(WsClientTestParameteor.class).getWsServerUrl().replace("ws://", "");
         Bootstrap      bootstrap = new Bootstrap();
         EventLoopGroup group     = new NioEventLoopGroup(count);
         AtomicInteger  index     = new AtomicInteger(-1);

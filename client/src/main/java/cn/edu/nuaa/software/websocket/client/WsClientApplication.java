@@ -15,14 +15,16 @@
  */
 package cn.edu.nuaa.software.websocket.client;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Queue;
@@ -51,23 +53,22 @@ import lombok.extern.slf4j.Slf4j;
 @EnableScheduling
 @RestController
 @EnableConfigurationProperties(WsClientTestParameteor.class)
-public class WsClientApplication implements ApplicationListener<ApplicationReadyEvent> {
+public class WsClientApplication implements ApplicationListener<ApplicationReadyEvent>, ApplicationContextAware {
 
     public static final ConcurrentMap<String, WsNamespaceParameter> TEST_PARAMETER_CONCURRENT_MAP = new ConcurrentHashMap<>(16);
     public static final ConcurrentMap<String, Queue<Receiver>>      CLIENT_MAP                    = new ConcurrentHashMap<>(16);
-    public static final ConcurrentMap<String, Boolean>         STATUS_MAP                    = new ConcurrentHashMap<>(16);
-    public static final ConcurrentMap<String, Boolean>         AUTO_SEND_MAP                 = new ConcurrentHashMap<>(16);
-    public static final ConcurrentMap<String, Lock>            LOCK_MAP                      = new ConcurrentHashMap<>(16);
-    public static final ConcurrentMap<String, AtomicInteger>   CONNECTION_COUNT_MAP          = new ConcurrentHashMap<>(16);
-    public static final ConcurrentMap<String, AuditPojo> AUDIT_MAP = new ConcurrentHashMap<>(16);
-    public static final ConcurrentMap<String, ReportDto> REPORTS_MAP = new ConcurrentHashMap<>(16);
-    public static String                                 url       = "ws://localhost:9000";
+    public static final ConcurrentMap<String, Boolean>              STATUS_MAP                    = new ConcurrentHashMap<>(16);
+    public static final ConcurrentMap<String, Boolean>              AUTO_SEND_MAP                 = new ConcurrentHashMap<>(16);
+    public static final ConcurrentMap<String, Lock>                 LOCK_MAP                      = new ConcurrentHashMap<>(16);
+    public static final ConcurrentMap<String, AtomicInteger>        CONNECTION_COUNT_MAP          = new ConcurrentHashMap<>(16);
+    public static final ConcurrentMap<String, AuditPojo>            AUDIT_MAP                     = new ConcurrentHashMap<>(16);
+    public static final ConcurrentMap<String, ReportDto>            REPORTS_MAP                   = new ConcurrentHashMap<>(16);
 
+    public static ApplicationContext applicationContext;
     @Autowired
     private WsClientTestParameteor clientTestParameteor;
-
     @Autowired
-    private             SenderController                       senderController;
+    private SenderController senderController;
 
     public static void main(String[] args) {
         SpringApplication.run(WsClientApplication.class, args);
@@ -84,6 +85,11 @@ public class WsClientApplication implements ApplicationListener<ApplicationReady
             AUTO_SEND_MAP.put(namespace, true);
             senderController.sendMessage(namespace, threadCount, taskCountPerThread);
         }
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        WsClientApplication.applicationContext = applicationContext;
     }
 }
 

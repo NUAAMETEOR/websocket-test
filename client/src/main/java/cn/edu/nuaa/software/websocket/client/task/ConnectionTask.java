@@ -23,6 +23,7 @@ import java.util.concurrent.CountDownLatch;
 
 import cn.edu.nuaa.software.websocket.client.WsClientApplication;
 import cn.edu.nuaa.software.websocket.client.common.WsUtil;
+import cn.edu.nuaa.software.websocket.client.dto.WsClientTestParameteor;
 import cn.edu.nuaa.software.websocket.client.netty.Receiver;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +52,7 @@ public class ConnectionTask implements Runnable {
         for (int i = 0; i < connectionCount; i++) {
             String s = WsUtil.makeName(namespace, taskNo, i);
             String name = Base64.getEncoder().encodeToString(s.getBytes(StandardCharsets.UTF_8));
-            String   url      = WsClientApplication.url + "?token=" + name;
+            String   url      = WsClientApplication.applicationContext.getBean(WsClientTestParameteor.class).getWsServerUrl() + "?token=" + name;
             Receiver receiver = new Receiver(namespace, s, url);
             receivers.offer(receiver);
             receiver.connect();

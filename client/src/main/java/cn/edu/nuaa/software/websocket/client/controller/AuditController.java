@@ -21,6 +21,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -90,20 +91,26 @@ public class AuditController {
             });
             return "OK";
         }
-        return "check your parameters";
+        return "empty report";
     }
 
     @Scheduled(cron = "0/15 * * * * ?")
     public void reportTaskToMaster() {
         if (StringUtils.hasText(clientTestParameteor.getMasterIp())) {
             try {
-                RestTemplate restTemplate = new RestTemplate();
-                HttpHeaders  headers      = new HttpHeaders();
+                RestTemplate    restTemplate = new RestTemplate();
+                HttpHeaders     headers      = new HttpHeaders();
+                List<ReportDto> reportDtos   = taskList();
+                log.info("report task to master <{}>", reportDtos);
                 headers.setContentType(MediaType.APPLICATION_JSON);
-                HttpEntity<List<ReportDto>> request        = new HttpEntity<>(taskList(), headers);
+                HttpEntity<List<ReportDto>> request        = new HttpEntity<>(reportDtos, headers);
                 String                      masterUrl      = "http://" + clientTestParameteor.getMasterIp() + "/audit/reportTask";
                 ResponseEntity<String>      responseEntity = restTemplate.postForEntity(masterUrl, request, String.class);
-                log.info("report task to master [{}]", responseEntity);
+                if (responseEntity.getStatusCode() == HttpStatus.OK) {
+                    log.debug("report task to master OK");
+                } else {
+                    log.error("report task to master failed");
+                }
             } catch (RestClientException e) {
                 e.printStackTrace();
             }

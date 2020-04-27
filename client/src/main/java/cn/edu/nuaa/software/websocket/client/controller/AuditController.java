@@ -96,7 +96,7 @@ public class AuditController {
 
     @Scheduled(cron = "0/15 * * * * ?")
     public void reportTaskToMaster() {
-        if (StringUtils.hasText(clientTestParameteor.getMasterIp())) {
+        if (StringUtils.hasText(clientTestParameteor.getMaster())) {
             try {
                 RestTemplate    restTemplate = new RestTemplate();
                 HttpHeaders     headers      = new HttpHeaders();
@@ -104,7 +104,7 @@ public class AuditController {
                 log.info("report task to master <{}>", reportDtos);
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 HttpEntity<List<ReportDto>> request        = new HttpEntity<>(reportDtos, headers);
-                String                      masterUrl      = "http://" + clientTestParameteor.getMasterIp() + "/audit/reportTask";
+                String                      masterUrl      = "http://" + clientTestParameteor.getMaster() + "/audit/reportTask";
                 ResponseEntity<String>      responseEntity = restTemplate.postForEntity(masterUrl, request, String.class);
                 if (responseEntity.getStatusCode() == HttpStatus.OK) {
                     log.debug("report task to master OK");

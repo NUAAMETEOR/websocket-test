@@ -30,5 +30,5 @@ import lombok.Data;
 @Data
 public class WsClientTestParameteor {
     private String wsServerUrl="ws://locahost:9000";
-    private String masterIp;
+    private String master="localhost:9090";
 }

@@ -113,6 +113,7 @@ public class AuditController {
                 }
             } catch (RestClientException e) {
                 e.printStackTrace();
+                log.error("report task to master failed,{}", e.getMessage());
             }
         }
     }
